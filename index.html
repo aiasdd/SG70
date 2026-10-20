@@ -195,8 +195,14 @@ p { margin: 0 0 16px; }
   .markdown pre { white-space: pre-wrap; }
 }
   </style>
-</head>
-<body class="catalog-page">
+    <style>
+      body.viewing-lab { overflow: hidden; }
+      #lab-viewer { position: fixed; inset: 0; width: 100%; height: 100dvh; border: 0; background: var(--cp-surface); }
+      .setup-chip { padding: 4px 12px; border: 1px solid var(--cp-border); border-radius: 999px; background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 600; }
+    </style>
+  </head>
+  <body class="catalog-page">
+    <div id="catalog">
   <a class="skip-link" href="#main">본문으로 이동</a>
   <header class="hero shell">
     <div>
@@ -205,9 +211,12 @@ p { margin: 0 0 16px; }
     </div>
   </header>
   <main class="shell" id="main">
+    <p id="route-error" class="error-message" role="alert" hidden></p>
     <div id="lab-sections"></div>
     <noscript><p class="error-message">실습 목록을 표시하려면 JavaScript를 활성화하세요. <a href="https://aiasdd.github.io/DP750/">DP750 원본 목록 보기</a></p></noscript>
   </main>
+  </div>
+  <iframe id="lab-viewer" title="Azure Databricks 실습 상세" allow="clipboard-write" hidden></iframe>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
 "use strict";
@@ -215,22 +224,24 @@ p { margin: 0 0 16px; }
 window.LabSite = (() => {
   const sourceBase = "https://aiasdd.github.io/DP750/";
   const stages = [
+    { title: "준비", note: "실습에 필요한 Azure Databricks 작업 영역을 준비합니다." },
     { title: "보안 및 거버넌스", note: "Unity Catalog 객체에 대한 접근 제어를 실습합니다." },
     { title: "데이터 수집 및 품질", note: "데이터를 수집하고 정제하며 품질 제약 조건을 적용합니다." },
     { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
   ];
   const rows = [
-    ["04", 0, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
-    ["07", 1, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
-    ["08", 1, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
-    ["09", 1, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
-    ["10", 2, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
-    ["11", 2, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
+    ["00", 0, "Azure Databricks 환경 설정", "00-setup", 15, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
+    ["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    ["07", 2, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
+    ["08", 2, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
+    ["09", 2, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
+    ["10", 3, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
+    ["11", 3, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
   ];
   const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
     id, stage, title, minutes, note,
     file: `Labs/${stem}.md`,
-    notebook: `Labs/Notebooks/${stem}.ipynb`
+    notebook: id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
   }));
 
   function viewerUrl(file) {
@@ -296,7 +307,8 @@ window.LabSite = (() => {
       badge.className = "badge";
       badge.textContent = `LAB ${lab.id}`;
       const duration = document.createElement("span");
-      duration.textContent = `${lab.minutes}분`;
+      duration.textContent = lab.id === "00" ? "Setup" : `${lab.minutes}분`;
+      if (lab.id === "00") duration.className = "setup-chip";
       meta.append(badge, duration);
       const name = document.createElement("h3");
       name.textContent = lab.title;
@@ -330,6 +342,91 @@ window.LabSite = (() => {
     root.append(section);
   });
 
+})();
+
+(() => {
+  const { labs, viewerUrl } = window.LabSite;
+  const catalog = document.getElementById("catalog");
+  const frame = document.getElementById("lab-viewer");
+  const error = document.getElementById("route-error");
+  const listTitle = document.title;
+  const rootUrl = new URL(location.protocol === "file:" ? "index.html" : "./", location.href).href;
+  const viewerPath = new URL("viewer.html", location.href).pathname;
+  const findLab = file => labs.find(lab => lab.file === file || lab.notebook === file);
+  let activeUrl = "";
+  let activeTitle = "";
+
+  function render(state) {
+    error.hidden = true;
+    const file = state?.labFile;
+    const lab = findLab(file);
+    if (file && !lab) {
+      console.error("등록되지 않은 실습 경로:", file);
+      error.textContent = "등록되지 않은 실습입니다. 목록에서 실습을 선택하세요.";
+      error.hidden = false;
+    }
+    catalog.hidden = Boolean(lab);
+    frame.hidden = !lab;
+    document.body.classList.toggle("viewing-lab", Boolean(lab));
+    if (!lab) {
+      document.title = listTitle;
+      return;
+    }
+    const target = new URL(viewerUrl(file));
+    target.hash = typeof state.labHash === "string" ? state.labHash : "";
+    document.title = activeUrl === target.href && activeTitle
+      ? activeTitle
+      : `${lab.title} | Azure Databricks Labs`;
+    if (activeUrl !== target.href) {
+      activeUrl = target.href;
+      activeTitle = "";
+      frame.contentWindow.location.replace(target.href);
+    }
+  }
+
+  function navigate(file, hash = "") {
+    if (file !== null && !findLab(file)) {
+      console.error("등록되지 않은 실습 이동 요청:", file);
+      error.textContent = "실습을 열 수 없습니다. 목록에서 실습을 선택하세요.";
+      error.hidden = false;
+      return;
+    }
+    const state = file ? { labFile: file, labHash: hash } : null;
+    history.pushState(state, "", rootUrl);
+    render(state);
+  }
+
+  document.addEventListener("click", event => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+    if (!link || link.target === "_blank") return;
+    const target = new URL(link.href);
+    if (target.origin !== location.origin || target.pathname !== viewerPath) return;
+    event.preventDefault();
+    navigate(target.searchParams.get("file"), target.hash);
+  });
+  addEventListener("message", event => {
+    if (event.source !== frame.contentWindow || event.origin !== location.origin || !event.data || typeof event.data !== "object") return;
+    const { type, file, hash, title } = event.data;
+    if (type === "labsite:home") navigate(null);
+    else if (type === "labsite:navigate") navigate(file, typeof hash === "string" ? hash : "");
+    else if (typeof file === "string" && file === history.state?.labFile) {
+      if (type === "labsite:title" && typeof title === "string") {
+        activeTitle = title;
+        document.title = title;
+      } else if (type === "labsite:position" && typeof hash === "string") {
+        history.replaceState({ ...history.state, labHash: hash }, "", rootUrl);
+        const current = new URL(activeUrl);
+        current.hash = hash;
+        activeUrl = current.href;
+      }
+    }
+  });
+  addEventListener("popstate", () => render(history.state));
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    history.replaceState(history.state, "", rootUrl);
+  }
+  render(history.state);
 })();
   });
 </script>

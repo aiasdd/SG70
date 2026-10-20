@@ -240,22 +240,24 @@ a { color: var(--cp-link); }
 window.LabSite = (() => {
   const sourceBase = "https://aiasdd.github.io/DP750/";
   const stages = [
+    { title: "준비", note: "실습에 필요한 Azure Databricks 작업 영역을 준비합니다." },
     { title: "보안 및 거버넌스", note: "Unity Catalog 객체에 대한 접근 제어를 실습합니다." },
     { title: "데이터 수집 및 품질", note: "데이터를 수집하고 정제하며 품질 제약 조건을 적용합니다." },
     { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
   ];
   const rows = [
-    ["04", 0, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
-    ["07", 1, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
-    ["08", 1, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
-    ["09", 1, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
-    ["10", 2, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
-    ["11", 2, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
+    ["00", 0, "Azure Databricks 환경 설정", "00-setup", 15, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
+    ["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    ["07", 2, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
+    ["08", 2, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
+    ["09", 2, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
+    ["10", 3, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
+    ["11", 3, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
   ];
   const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
     id, stage, title, minutes, note,
     file: `Labs/${stem}.md`,
-    notebook: `Labs/Notebooks/${stem}.ipynb`
+    notebook: id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
   }));
 
   function viewerUrl(file) {
@@ -299,6 +301,26 @@ window.LabSite = (() => {
   const contentArea = document.querySelector(".content-area");
   let sourceUrl;
 
+  function notifyHost(type, data = {}) {
+    if (parent !== window) {
+      parent.postMessage({ type, file, ...data }, location.origin === "null" ? "*" : location.origin);
+    }
+  }
+  document.addEventListener("click", event => {
+    if (parent === window || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+    if (!link || link.target === "_blank") return;
+    const target = new URL(link.href);
+    if (target.origin !== location.origin) return;
+    if (target.pathname === new URL("index.html", location.href).pathname) {
+      event.preventDefault();
+      notifyHost("labsite:home");
+    } else if (target.pathname === new URL("viewer.html", location.href).pathname && target.searchParams.has("file")) {
+      event.preventDefault();
+      notifyHost("labsite:navigate", { file: target.searchParams.get("file"), hash: target.hash });
+    }
+  });
+
   const topbar = document.querySelector(".topbar");
   new ResizeObserver(() => {
     document.documentElement.style.setProperty("--cp-topbar-height", `${topbar.getBoundingClientRect().height}px`);
@@ -330,6 +352,7 @@ window.LabSite = (() => {
   }
   addEventListener("hashchange", () => {
     if (location.hash) scrollToHeading(decodeURIComponent(location.hash.slice(1)));
+    notifyHost("labsite:position", { hash: location.hash });
   });
 
   function showError(error) {
@@ -529,6 +552,7 @@ window.LabSite = (() => {
         link.setAttribute("aria-current", "location");
         history.pushState(null, "", link.getAttribute("href"));
         scrollToHeading(id);
+        notifyHost("labsite:position", { hash: location.hash });
       });
       item.append(link);
       list.append(item);
@@ -566,6 +590,7 @@ window.LabSite = (() => {
         document.title = `${documentTitle}${file.endsWith(".ipynb") ? " · 노트북" : ""} | Azure Databricks Labs`;
       }
       enhanceContent();
+      notifyHost("labsite:title", { title: document.title });
       status.textContent = file.endsWith(".ipynb")
         ? "노트북을 불러왔습니다. Markdown과 소스 코드만 표시하며 실행 결과는 표시하지 않습니다."
         : "실습 가이드를 불러왔습니다.";
@@ -579,6 +604,11 @@ window.LabSite = (() => {
 
   if (!lab) {
     showError(new Error("잘못된 파일 경로입니다."));
+    return;
+  }
+  if (parent === window && (location.protocol === "http:" || location.protocol === "https:")) {
+    history.replaceState({ labFile: file, labHash: location.hash }, "", new URL("./", location.href));
+    location.reload();
     return;
   }
   const isNotebook = file === lab.notebook;
