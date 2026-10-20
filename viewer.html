@@ -145,6 +145,7 @@ a { color: var(--cp-link); }
 .markdown p { margin: 0 0 1rem; }
 .markdown blockquote { margin: 1.2rem 0 1.6rem; padding: .8rem 1rem; border-left: 4px solid var(--cp-accent); background: var(--cp-accent-soft); color: var(--cp-note-text); }
 .markdown blockquote p:last-child { margin-bottom: 0; }
+.admonition-icon { display: inline-block; margin-inline-end: .4em; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; font-size: 1.1em; line-height: 1; vertical-align: -.05em; }
 .markdown ol, .markdown ul { padding-left: 1.8rem; }
 .markdown li { padding-left: .1rem; margin: .35rem 0; }
 .markdown li::marker { color: var(--cp-accent-hover); }
@@ -439,6 +440,29 @@ window.LabSite = (() => {
   }
 
   function enhanceContent() {
+    const admonitions = {
+      NOTE: { icon: "ℹ️", label: "참고" },
+      TIP: { icon: "💡", label: "팁" },
+      IMPORTANT: { icon: "❗", label: "중요" },
+      WARNING: { icon: "⚠️", label: "경고" },
+      CAUTION: { icon: "🛑", label: "주의" }
+    };
+    content.querySelectorAll("blockquote").forEach(quote => {
+      const paragraph = quote.firstElementChild;
+      if (paragraph?.tagName !== "P" || paragraph.firstChild?.nodeType !== Node.TEXT_NODE) return;
+      const text = paragraph.firstChild;
+      const marker = text.textContent.match(/^\s*(?:\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]|!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\b)(?:[ \t]*[:：])?[ \t]*(?:\r?\n)?/i);
+      if (!marker) return;
+      const { icon, label } = admonitions[(marker[1] || marker[2]).toUpperCase()];
+      const symbol = document.createElement("span");
+      symbol.className = "admonition-icon";
+      symbol.textContent = icon;
+      symbol.setAttribute("role", "img");
+      symbol.setAttribute("aria-label", label);
+      symbol.title = label;
+      text.textContent = text.textContent.slice(marker[0].length);
+      paragraph.prepend(symbol);
+    });
     content.querySelectorAll("a[href]").forEach(link => {
       const label = link.textContent.trim();
       if (/^(?:https?:\/\/|www\.|mailto:)\S+$/i.test(label) ||
