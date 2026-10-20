@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Azure Databricks 한국어 실습 가이드 및 노트북 뷰어">
+  <title>실습 뷰어 | Azure Databricks Labs</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #7f1e22;
+      --cp-accent-hover: #66181b;
+      --cp-accent-soft: rgba(127, 30, 34, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(127, 30, 34, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #f0a1a5;
+      --cp-accent-hover: #f3b7ba;
+      --cp-accent-soft: rgba(240, 161, 165, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(240, 161, 165, 0.12);
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <style>
+:root, html[data-theme] {
+  color-scheme: light;
+  --cp-bg: #f4f4f4;
+  --cp-surface: #ffffff;
+  --cp-text: #222222;
+  --cp-text-muted: #666666;
+  --cp-border: #dedede;
+  --cp-accent: #ac292d;
+  --cp-accent-hover: #8e2225;
+  --cp-accent-soft: #f8eeee;
+  --cp-accent-fg: #ffffff;
+  --cp-link: #0078d4;
+  --cp-title: #1a1a1a;
+  --cp-heading: #333333;
+  --cp-note-text: #4e4e4e;
+  --cp-nav-border: #d4d4d4;
+  --cp-nav-disabled: #a6a6a6;
+  --cp-link-soft: #eef7ff;
+  --cp-table-head: #f7f7f7;
+  --cp-code: #f0f0f0;
+  --cp-code-block: #f5f5f5;
+  --cp-toc-border: #e3e3e3;
+  --cp-copy-border: #999999;
+  --cp-copy-hover: #ededed;
+  --cp-clear: transparent;
+  --cp-danger: #b00020;
+  --cp-font-body: "Pretendard Variable", Pretendard, sans-serif;
+  --cp-font-code: Consolas, "Pretendard Variable", Pretendard, "Courier New", monospace;
+  --cp-topbar-height: 5rem;
+  --cp-header-gap: .85rem;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; }
+body { margin: 0; font-family: var(--cp-font-body); color: var(--cp-text); background: var(--cp-bg); overflow: hidden; }
+button { font: inherit; }
+a { color: var(--cp-link); }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.skip-link { position: fixed; top: -100px; left: 16px; z-index: 30; padding: 12px; background: var(--cp-surface); }
+.skip-link:focus { top: 8px; }
+.viewer-shell { width: min(1560px, calc(100% - 2rem)); margin: 0 auto; height: 100vh; }
+.topbar { background: var(--cp-surface); border-bottom: 3px solid var(--cp-accent); padding: .75rem clamp(1rem, 2.5vw, 3.125rem); display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; position: fixed; inset: 0 0 auto; width: 100%; min-height: 5rem; z-index: 20; }
+.topbar-title { min-width: 0; margin: 0; color: var(--cp-title); font-size: 1.35rem; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-nav { display: flex; align-items: center; gap: .5rem; flex: 0 0 auto; }
+.button { display: inline-flex; min-height: 2.5rem; align-items: center; justify-content: center; padding: .3rem .8rem; border: 1px solid var(--cp-nav-border); border-radius: .65rem; background: var(--cp-surface); text-decoration: none; color: var(--cp-title); font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.button:hover:not([aria-disabled="true"]) { background: var(--cp-accent-soft); border-color: var(--cp-accent); }
+.button:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+.home-link { color: var(--cp-link); }
+.home-link:hover { background: var(--cp-link-soft); border-color: var(--cp-link); }
+.button[aria-disabled="true"] { color: var(--cp-nav-disabled); cursor: default; pointer-events: none; }
+.viewer-layout { display: flex; gap: .5rem; align-items: flex-start; margin-top: calc(var(--cp-topbar-height) + var(--cp-header-gap)); height: calc(100vh - var(--cp-topbar-height) - var(--cp-header-gap) - 1rem); overflow: hidden; }
+.sidebar { flex: 0 0 240px; max-height: 100%; overflow-y: auto; }
+.sidebar-inner { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 14px; overflow: hidden; }
+.toc-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid var(--cp-toc-border); }
+.toc-title { border: 0; padding: 0; background: none; font-size: 1.05rem; font-weight: 700; color: var(--cp-title); cursor: pointer; }
+.toc-toggle { border: 0; padding: 0 .2rem; background: none; color: var(--cp-text-muted); font-size: 1.1rem; cursor: pointer; }
+.sidebar.is-collapsed { flex-basis: 64px; }
+.sidebar.is-collapsed .toc-header { flex-direction: column; gap: .75rem; padding: 1rem .5rem; border-bottom: 0; }
+.sidebar.is-collapsed .toc-title { writing-mode: vertical-rl; }
+#toc ul { list-style: none; margin: 0; padding: .75rem .5rem 1rem; }
+#toc li { margin: 0; padding: 0; }
+#toc a { display: block; padding: .45rem .5rem; color: var(--cp-text-muted); text-decoration: none; font-size: .85rem; line-height: 1.5; border-left: 3px solid var(--cp-clear); transition: color .15s, background-color .15s, border-color .15s; }
+#toc a:hover, #toc a[aria-current="location"] { color: var(--cp-heading); background: var(--cp-accent-soft); border-left-color: var(--cp-accent); }
+#toc .level-1 { margin-left: 0; font-weight: 600; margin-top: .3rem; }
+#toc .level-2 { margin-left: 0; }
+#toc .level-3 { margin-left: .8rem; }
+#toc .level-4 { margin-left: 1.6rem; }
+.content-area { flex: 1; min-width: 0; max-height: 100%; overflow-y: auto; padding-right: .2rem; scroll-behavior: auto; }
+.markdown { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 14px; padding: clamp(1.25rem, 3.8vw, 4.5rem) 1.5rem; line-height: 1.8; color: var(--cp-text); overflow-x: auto; }
+.markdown h1, .markdown h2, .markdown h3 { line-height: 1.3; }
+.markdown h1 { margin: 0 0 1.8rem; padding: .8rem 1rem; border-radius: 8px; background: var(--cp-accent); color: var(--cp-accent-fg); font-size: clamp(1.5rem, 2vw, 2.15rem); }
+.markdown h2 { margin: 2.8rem 0 1.3rem; padding-bottom: .85rem; border-bottom: 1px solid var(--cp-border); color: var(--cp-text); font-size: clamp(1.35rem, 1.8vw, 1.8rem); }
+.markdown h3 { margin: 2rem 0 .9rem; color: var(--cp-heading); font-size: 1.25rem; }
+.markdown p { margin: 0 0 1rem; }
+.markdown blockquote { margin: 1.2rem 0 1.6rem; padding: .8rem 1rem; border-left: 4px solid var(--cp-accent); background: var(--cp-accent-soft); color: var(--cp-note-text); }
+.markdown blockquote p:last-child { margin-bottom: 0; }
+.markdown ol, .markdown ul { padding-left: 1.8rem; }
+.markdown li { padding-left: .1rem; margin: .35rem 0; }
+.markdown li::marker { color: var(--cp-accent-hover); }
+.markdown a { color: var(--cp-link); }
+.markdown hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--cp-border); }
+.markdown > hr:first-child { display: none; }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.markdown table { border-collapse: collapse; width: 100%; }
+.markdown th, .markdown td { border: 1px solid var(--cp-border); padding: .45rem .55rem; text-align: left; }
+.markdown th { background: var(--cp-table-head); }
+.markdown th:first-child, .markdown td:first-child { white-space: nowrap; width: 110px; }
+.markdown :is(code, pre, kbd, samp, .url-text) { font-family: var(--cp-font-code); }
+.markdown code { background: var(--cp-code); padding: .1rem .28rem; border-radius: 4px; font-size: 13px; }
+.inline-code-copy { position: relative; display: inline-block; cursor: copy; }
+.inline-code-copy:hover, .inline-code-copy:focus-visible { background: var(--cp-accent-soft); outline: none; }
+.inline-code-copy::after { position: absolute; z-index: 2; right: 0; bottom: calc(100% + .4rem); display: none; padding: .2rem .45rem; border-radius: 4px; background: var(--cp-heading); color: var(--cp-accent-fg); content: attr(data-copy-label); font: .75rem var(--cp-font-body); white-space: nowrap; pointer-events: none; }
+.inline-code-copy:hover::after, .inline-code-copy:focus-visible::after { display: block; }
+.markdown pre { background: var(--cp-code-block); color: var(--cp-text); border: 1px solid var(--cp-border); padding: .5rem 4rem .5rem .9rem; font-size: .9rem; line-height: 1.6; border-radius: 10px; overflow-x: auto; }
+.markdown pre code { background: var(--cp-clear); color: inherit; font-size: inherit; padding: 0; }
+.markdown img { max-width: 100%; height: auto; display: block; }
+.markdown img[alt="assistant-icon"], .markdown img[alt="assistant icon"] { display: inline-block; width: 1.05em; height: 1.05em; max-width: none; margin: 0 .15em; vertical-align: text-bottom; }
+.code-block-wrap { position: relative; }
+.copy-button { position: absolute; top: calc(.5rem + 1px); right: .45rem; display: inline-flex; align-items: center; justify-content: center; height: 1.44rem; border: 1px solid var(--cp-copy-border); background: var(--cp-surface); color: var(--cp-text); border-radius: 6px; padding: 0 .4rem; font-family: var(--cp-font-body); font-size: .75rem; font-weight: 600; line-height: 1.2; cursor: pointer; }
+.copy-button:hover { background: var(--cp-copy-hover); border-color: var(--cp-text-muted); }
+.copy-button:focus-visible { outline: 2px solid var(--cp-text-muted); outline-offset: 2px; }
+.notebook-cell { border-bottom: 1px solid var(--cp-border); padding-bottom: 20px; margin-bottom: 24px; }
+.cell-label { color: var(--cp-text-muted); font-size: .8rem; }
+.error-message { color: var(--cp-danger); font-weight: 600; }
+.error-box { padding: 24px; border: 1px solid var(--cp-danger); border-radius: 10px; }
+.error-box button { padding: 8px 16px; border: 1px solid var(--cp-border); border-radius: 10px; background: var(--cp-surface); color: var(--cp-text); cursor: pointer; }
+@media (max-width: 768px) {
+  :root, html[data-theme] { --cp-header-gap: .5rem; }
+  body { overflow: auto; }
+  .viewer-shell { height: auto; }
+  .topbar { flex-wrap: wrap; justify-content: center; gap: .45rem; padding: .55rem 1rem; min-height: 7rem; }
+  .topbar-title { flex: 0 0 100%; text-align: center; font-size: 1.1rem; }
+  .topbar-nav { justify-content: center; width: 100%; }
+  .button { min-height: 2.35rem; padding: .25rem .65rem; font-size: .9rem; }
+  .markdown { padding: 1.2rem; }
+  .markdown :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--cp-topbar-height) + 16px); }
+  .viewer-layout { flex-direction: column; height: auto; overflow: visible; }
+  .sidebar { flex: 1 1 auto; max-height: 300px; }
+  .sidebar.is-collapsed { flex: 0 0 auto; width: 64px; }
+  .content-area { width: 100%; max-height: none; overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #toc a { transition: none; }
+}
+@media print {
+  body { overflow: visible; }
+  .topbar, .sidebar, .copy-button, .skip-link { display: none; }
+  .viewer-shell, .viewer-layout { width: 100%; height: auto; margin: 0; overflow: visible; }
+  .content-area { max-height: none; overflow: visible; }
+  .markdown { border: 0; padding: 0; }
+  .markdown pre { white-space: pre-wrap; }
+}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.7/dist/purify.min.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">본문으로 이동</a>
+  <header class="topbar">
+    <h1 class="topbar-title" id="page-title">실습 문서</h1>
+    <nav class="topbar-nav" aria-label="상단 실습 이동">
+      <a class="button" id="top-previous-link" role="link" aria-disabled="true" tabindex="-1">← 이전</a>
+      <a class="button home-link" href="index.html">홈으로 가기</a>
+      <a class="button" id="top-next-link" role="link" aria-disabled="true" tabindex="-1">다음 →</a>
+    </nav>
+  </header>
+  <div class="viewer-shell">
+  <div class="viewer-layout">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="toc-header">
+          <button id="toc-title" class="toc-title" type="button" aria-expanded="true" aria-controls="toc">목차</button>
+          <button id="toc-toggle" class="toc-toggle" type="button" aria-expanded="true" aria-controls="toc" aria-label="목차 접기">−</button>
+        </div>
+        <nav id="toc" aria-label="문서 목차"><p class="muted">문서를 불러오는 중입니다.</p></nav>
+      </div>
+    </aside>
+    <main class="content-area">
+      <p id="status" class="sr-only" role="status" aria-live="polite">문서를 불러오는 중입니다…</p>
+      <article id="content" class="markdown" aria-busy="true" tabindex="-1"></article>
+      <noscript><p class="error-message">문서 뷰어를 사용하려면 JavaScript를 활성화하세요. <a href="https://aiasdd.github.io/DP750/">DP750 원본 보기</a></p></noscript>
+    </main>
+  </div>
+  </div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+"use strict";
+
+window.LabSite = (() => {
+  const sourceBase = "https://aiasdd.github.io/DP750/";
+  const stages = [
+    { title: "보안 및 거버넌스", note: "Unity Catalog 객체에 대한 접근 제어를 실습합니다." },
+    { title: "데이터 수집 및 품질", note: "데이터를 수집하고 정제하며 품질 제약 조건을 적용합니다." },
+    { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
+  ];
+  const rows = [
+    ["04", 0, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    ["07", 1, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
+    ["08", 1, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
+    ["09", 1, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
+    ["10", 2, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
+    ["11", 2, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
+  ];
+  const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
+    id, stage, title, minutes, note,
+    file: `Labs/${stem}.md`,
+    notebook: `Labs/Notebooks/${stem}.ipynb`
+  }));
+
+  function viewerUrl(file) {
+    const url = new URL("viewer.html", location.href);
+    url.searchParams.set("file", file);
+    const theme = new URLSearchParams(location.search).get("scoutTheme");
+    if (theme === "light" || theme === "dark") url.searchParams.set("scoutTheme", theme);
+    return url.href;
+  }
+
+  const requestedTheme = new URLSearchParams(location.search).get("scoutTheme");
+  const systemTheme = matchMedia("(prefers-color-scheme: dark)");
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+  }
+  setTheme(["light", "dark"].includes(requestedTheme) ? requestedTheme : systemTheme.matches ? "dark" : "light");
+  systemTheme.addEventListener("change", event => {
+    if (!new URLSearchParams(location.search).has("scoutTheme")) setTheme(event.matches ? "dark" : "light");
+  });
+  if (["light", "dark"].includes(requestedTheme)) {
+    document.querySelectorAll('a[href^="index.html"], a[href^="viewer.html"]').forEach(link => {
+      const url = new URL(link.href);
+      url.searchParams.set("scoutTheme", requestedTheme);
+      link.href = url.href;
+    });
+  }
+  return { sourceBase, stages, labs, viewerUrl };
+})();
+
+"use strict";
+
+(() => {
+  const { labs, sourceBase, viewerUrl } = window.LabSite;
+  const params = new URLSearchParams(location.search);
+  const file = params.has("file") ? params.get("file") : labs[0].file;
+  const lab = labs.find(item => item.file === file || item.notebook === file);
+  const content = document.getElementById("content");
+  const status = document.getElementById("status");
+  const toc = document.getElementById("toc");
+  const title = document.getElementById("page-title");
+  const contentArea = document.querySelector(".content-area");
+  let sourceUrl;
+
+  const topbar = document.querySelector(".topbar");
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty("--cp-topbar-height", `${topbar.getBoundingClientRect().height}px`);
+  }).observe(topbar);
+
+  const tocToggle = document.getElementById("toc-toggle");
+  const tocTitle = document.getElementById("toc-title");
+  function toggleToc() {
+    toc.hidden = !toc.hidden;
+    [tocToggle, tocTitle].forEach(button => button.setAttribute("aria-expanded", String(!toc.hidden)));
+    document.querySelector(".sidebar").classList.toggle("is-collapsed", toc.hidden);
+    tocToggle.textContent = toc.hidden ? "+" : "−";
+    tocToggle.setAttribute("aria-label", toc.hidden ? "목차 펼치기" : "목차 접기");
+  }
+  tocToggle.addEventListener("click", toggleToc);
+  tocTitle.addEventListener("click", toggleToc);
+
+  function scrollToHeading(id) {
+    const heading = document.getElementById(id);
+    if (!heading) return;
+    if (matchMedia("(max-width: 768px)").matches) {
+      heading.scrollIntoView({ behavior: "instant", block: "start" });
+    } else {
+      contentArea.scrollTo({
+        top: heading.getBoundingClientRect().top - contentArea.getBoundingClientRect().top + contentArea.scrollTop - 8,
+        behavior: "instant"
+      });
+    }
+  }
+  addEventListener("hashchange", () => {
+    if (location.hash) scrollToHeading(decodeURIComponent(location.hash.slice(1)));
+  });
+
+  function showError(error) {
+    console.error("실습 문서 로드 실패:", error);
+    status.textContent = `문서를 표시할 수 없습니다: ${error.message}`;
+    status.className = "error-message";
+    content.replaceChildren();
+    const box = document.createElement("div");
+    box.className = "error-box";
+    const message = document.createElement("p");
+    message.textContent = lab
+      ? "네트워크 연결과 원본 사이트 상태를 확인한 뒤 다시 시도하세요."
+      : "등록된 실습 파일만 열 수 있습니다. 실습 목록에서 문서를 선택하세요.";
+    box.append(message);
+    if (lab) {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = "다시 시도";
+      retry.addEventListener("click", load);
+      box.append(retry);
+    }
+    content.append(box);
+    content.setAttribute("aria-busy", "false");
+    toc.textContent = "표시할 목차가 없습니다.";
+  }
+
+  function markdown(text) {
+    const clean = text.replace(/^\uFEFF/, "").replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
+    const template = document.createElement("template");
+    template.innerHTML = DOMPurify.sanitize(marked.parse(clean), {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["style", "form", "input", "button", "textarea", "select"],
+      FORBID_ATTR: ["style"]
+    });
+    return template.content;
+  }
+
+  function renderNotebook(text) {
+    const notebook = JSON.parse(text);
+    if (notebook.nbformat !== 4 || !Array.isArray(notebook.cells)) {
+      throw new Error("지원하지 않는 노트북 형식입니다. nbformat 4 문서가 필요합니다.");
+    }
+    const fragment = document.createDocumentFragment();
+    notebook.cells.forEach((cell, index) => {
+      if (!cell || !["markdown", "code", "raw"].includes(cell.cell_type)) {
+        throw new Error(`노트북 셀 ${index + 1}의 형식이 올바르지 않습니다.`);
+      }
+      const validSource = typeof cell.source === "string" ||
+        (Array.isArray(cell.source) && cell.source.every(line => typeof line === "string"));
+      if (!validSource) throw new Error(`노트북 셀 ${index + 1}에 유효한 소스가 없습니다.`);
+      const source = Array.isArray(cell.source) ? cell.source.join("") : cell.source;
+      const section = document.createElement("section");
+      section.className = "notebook-cell";
+      const label = document.createElement("p");
+      label.className = "cell-label";
+      label.textContent = `셀 ${index + 1} · ${cell.cell_type}`;
+      section.append(label);
+      if (cell.cell_type === "markdown") section.append(markdown(source));
+      else {
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        code.textContent = source;
+        pre.append(code);
+        section.append(pre);
+      }
+      fragment.append(section);
+    });
+    return fragment;
+  }
+
+  async function copyCode(text) {
+    try {
+      if (!navigator.clipboard) throw new Error("HTTPS 또는 localhost에서 열어 주세요.");
+      await navigator.clipboard.writeText(text);
+      status.textContent = "코드를 클립보드에 복사했습니다.";
+      status.className = "sr-only";
+      return true;
+    } catch (error) {
+      console.error("코드 복사 실패:", error);
+      status.textContent = `코드 복사 실패: ${error.message} 코드를 직접 선택해 복사하세요.`;
+      status.className = "error-message";
+      return false;
+    }
+  }
+
+  function enhanceContent() {
+    content.querySelectorAll("a[href]").forEach(link => {
+      const label = link.textContent.trim();
+      if (/^(?:https?:\/\/|www\.|mailto:)\S+$/i.test(label) ||
+          /^(?:[a-z\d-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#]\S*)?$/i.test(label)) {
+        link.classList.add("url-text");
+      }
+      const href = link.getAttribute("href");
+      if (href.startsWith("#")) return;
+      const url = new URL(href, sourceUrl);
+      if (!["http:", "https:", "mailto:"].includes(url.protocol)) {
+        link.removeAttribute("href");
+        return;
+      }
+      const target = labs.find(item => [item.file, item.notebook].filter(Boolean)
+        .some(path => new URL(path, sourceBase).href === `${url.origin}${url.pathname}`));
+      if (target && !url.search) {
+        const path = url.pathname.slice(new URL(sourceBase).pathname.length);
+        link.href = viewerUrl(path) + url.hash;
+      } else {
+        link.href = url.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    });
+    content.querySelectorAll("img[src]").forEach(image => {
+      let url = new URL(image.getAttribute("src"), sourceUrl);
+      // The notebooks still reference this image in an older repository.
+      if (url.href === "https://raw.githubusercontent.com/asddai/AzureDatabricks/main/Labs/Media/GenieCode.png") {
+        url = new URL("Labs/Media/GenieCode.png", sourceBase);
+      }
+      if (!["http:", "https:"].includes(url.protocol)) {
+        image.removeAttribute("src");
+        return;
+      }
+      image.src = url.href;
+      image.removeAttribute("srcset");
+      image.loading = "eager";
+      image.addEventListener("error", () => {
+        status.textContent = "일부 이미지를 불러오지 못했습니다. 네트워크 연결과 원본 서버 상태를 확인하세요.";
+        status.className = "error-message";
+      }, { once: true });
+    });
+    content.querySelectorAll("table").forEach(table => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-scroll";
+      wrapper.tabIndex = 0;
+      wrapper.setAttribute("role", "region");
+      wrapper.setAttribute("aria-label", "실습 표 (가로 스크롤 가능)");
+      table.before(wrapper);
+      wrapper.append(table);
+    });
+    content.querySelectorAll("pre").forEach(pre => {
+      const code = pre.querySelector("code");
+      if (!code) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-block-wrap";
+      pre.before(wrapper);
+      wrapper.append(pre);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-button";
+      button.textContent = "복사";
+      button.setAttribute("aria-label", "코드 블록 복사");
+      button.addEventListener("click", async () => {
+        const copied = await copyCode(code.textContent);
+        button.textContent = copied ? "복사됨" : "실패";
+        setTimeout(() => { button.textContent = "복사"; }, 1200);
+      });
+      wrapper.append(button);
+    });
+    content.querySelectorAll("code").forEach(code => {
+      if (code.closest("pre")) return;
+      code.classList.add("inline-code-copy");
+      code.dataset.copyLabel = "클릭하여 복사";
+      code.title = "클릭하여 복사";
+      code.tabIndex = 0;
+      code.setAttribute("role", "button");
+      code.setAttribute("aria-label", `코드 복사: ${code.textContent}`);
+      const copy = async () => {
+        const copied = await copyCode(code.textContent);
+        code.dataset.copyLabel = copied ? "복사됨" : "복사 실패";
+        setTimeout(() => { code.dataset.copyLabel = "클릭하여 복사"; }, 1200);
+      };
+      code.addEventListener("click", copy);
+      code.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          copy();
+        }
+      });
+    });
+    const usedIds = new Set();
+    const list = document.createElement("ul");
+    const headings = content.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    headings.forEach((heading, index) => {
+      const stem = heading.textContent.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s/g, "-") || `section-${index}`;
+      let id = stem;
+      let suffix = 1;
+      while (usedIds.has(id) || (document.getElementById(id) && document.getElementById(id) !== heading)) id = `${stem}-${suffix++}`;
+      usedIds.add(id);
+      heading.id = id;
+      if (index === 0 || Number(heading.tagName.slice(1)) > 4) return;
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${encodeURIComponent(id)}`;
+      link.className = `level-${heading.tagName.slice(1)}`;
+      link.textContent = heading.textContent;
+      link.addEventListener("click", event => {
+        event.preventDefault();
+        toc.querySelectorAll("[aria-current]").forEach(active => active.removeAttribute("aria-current"));
+        link.setAttribute("aria-current", "location");
+        history.pushState(null, "", link.getAttribute("href"));
+        scrollToHeading(id);
+      });
+      item.append(link);
+      list.append(item);
+    });
+    toc.replaceChildren(list);
+    if (!list.children.length) toc.textContent = "이 문서에는 제목 목차가 없습니다.";
+    if (location.hash) {
+      scrollToHeading(decodeURIComponent(location.hash.slice(1)));
+    }
+  }
+
+  async function load() {
+    content.setAttribute("aria-busy", "true");
+    content.replaceChildren();
+    status.textContent = "DP750에서 원본 문서를 불러오는 중입니다…";
+    status.className = "sr-only";
+    toc.textContent = "문서를 불러오는 중입니다.";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      if (!window.marked || !window.DOMPurify) {
+        throw new Error("문서 렌더링 라이브러리를 불러오지 못했습니다. jsDelivr 연결을 확인하세요.");
+      }
+      const response = await fetch(sourceUrl, { signal: controller.signal });
+      if (!response.ok) throw new Error(`원본 서버 응답: HTTP ${response.status}`);
+      const text = await response.text();
+      if (/^\s*<!doctype html|^\s*<html[\s>]/i.test(text)) {
+        throw new Error("원본 파일 대신 HTML 페이지가 반환되었습니다.");
+      }
+      if (!text.trim()) throw new Error("원본 문서가 비어 있습니다.");
+      content.replaceChildren(file.endsWith(".ipynb") ? renderNotebook(text) : markdown(text));
+      const documentTitle = content.querySelector("h1")?.textContent.trim().replace(/^랩\s*\d+\s*:\s*/i, "");
+      if (documentTitle) {
+        title.textContent = documentTitle;
+        document.title = `${documentTitle}${file.endsWith(".ipynb") ? " · 노트북" : ""} | Azure Databricks Labs`;
+      }
+      enhanceContent();
+      status.textContent = file.endsWith(".ipynb")
+        ? "노트북을 불러왔습니다. Markdown과 소스 코드만 표시하며 실행 결과는 표시하지 않습니다."
+        : "실습 가이드를 불러왔습니다.";
+    } catch (error) {
+      showError(error.name === "AbortError" ? new Error("원본 서버 연결 시간이 초과되었습니다. 다시 시도하세요.") : error);
+    } finally {
+      clearTimeout(timeout);
+      content.setAttribute("aria-busy", "false");
+    }
+  }
+
+  if (!lab) {
+    showError(new Error("잘못된 파일 경로입니다."));
+    return;
+  }
+  const isNotebook = file === lab.notebook;
+  sourceUrl = new URL(file, sourceBase).href;
+  title.textContent = lab.title;
+  document.title = `${lab.title}${isNotebook ? " · 노트북" : ""} | Azure Databricks Labs`;
+  function configureLink(id, href, text) {
+    const link = document.getElementById(id);
+    link.href = href;
+    if (text) link.textContent = text;
+    link.removeAttribute("aria-disabled");
+    link.removeAttribute("tabindex");
+    link.hidden = false;
+    return link;
+  }
+  const sequence = labs;
+  const index = sequence.indexOf(lab);
+  const previous = sequence[index - 1];
+  const next = sequence[index + 1];
+  const targetFile = item => isNotebook && item.notebook ? item.notebook : item.file;
+  if (previous) {
+    const href = viewerUrl(targetFile(previous));
+    configureLink("top-previous-link", href).setAttribute("aria-label", `이전 실습: ${previous.title}`);
+  }
+  if (next) {
+    const href = viewerUrl(targetFile(next));
+    configureLink("top-next-link", href).setAttribute("aria-label", `다음 실습: ${next.title}`);
+  }
+  load();
+})();
+  });
+</script>
+</body>
+</html>

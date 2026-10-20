@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Azure Databricks Lab 04 및 Lab 07~11: Unity Catalog 보안, 데이터 수집·품질 및 파이프라인 실습 가이드">
+  <title>Azure Databricks Labs All | SG70</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #7f1e22;
+      --cp-accent-hover: #66181b;
+      --cp-accent-soft: rgba(127, 30, 34, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(127, 30, 34, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #f0a1a5;
+      --cp-accent-hover: #f3b7ba;
+      --cp-accent-soft: rgba(240, 161, 165, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(240, 161, 165, 0.12);
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <style>
+:root {
+  --cp-font-body: Pretendard, "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  --cp-font-code: Consolas, "Courier New", Courier, monospace;
+  --cp-topbar-border: #9e3533;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font-family: var(--cp-font-body); line-height: 1.7; }
+a { color: var(--cp-link); text-underline-offset: 4px; }
+button, input { font: inherit; }
+button, .button { border: 1px solid var(--cp-border); border-radius: .625rem; background: var(--cp-surface); color: var(--cp-text); padding: 8px 16px; cursor: pointer; }
+button:hover, .button:hover { border-color: var(--cp-accent); color: var(--cp-accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 4px; }
+[hidden] { display: none !important; }
+h1, h2, h3 { line-height: 1.35; overflow-wrap: anywhere; }
+p { margin: 0 0 16px; }
+.shell { width: min(1100px, calc(100% - 40px)); margin-inline: auto; }
+.catalog-page { background: var(--cp-surface-soft); }
+.muted, .section-heading p, .lab-card p { color: var(--cp-text-muted); }
+.skip-link { position: fixed; top: -100px; left: 16px; padding: 12px; background: var(--cp-surface); z-index: 10; }
+.skip-link:focus { top: 8px; }
+.hero { background: var(--cp-accent); color: var(--cp-accent-fg); border-radius: 16px; padding: 32px; margin-top: 32px; margin-bottom: 32px; }
+.eyebrow { color: var(--cp-accent); font-size: .8rem; letter-spacing: .1em; font-weight: 700; margin: 0; }
+.hero h1 { font-size: clamp(1.4rem, 2.2vw, 2rem); margin: 8px 0 12px; line-height: 1.25; }
+.hero-copy { color: var(--cp-accent-fg); font-size: 1rem; margin: 0; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-size: .9rem; }
+.primary { background: var(--cp-accent); border-color: var(--cp-accent); color: var(--cp-accent-fg); font-weight: 700; }
+.primary:hover { background: var(--cp-accent-hover); color: var(--cp-accent-fg); }
+.path-section { margin: 0 0 20px; padding: 16px; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: .625rem; }
+.section-heading { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.section-heading h2 { margin: 0 0 4px; font-size: 1rem; color: var(--cp-accent); }
+.section-heading p { margin: 0; font-size: .85rem; }
+.section-toggle { flex: 0 0 28px; width: 28px; height: 28px; background: var(--cp-accent-soft); border-color: var(--cp-border); color: var(--cp-accent); font-weight: 700; padding: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; }
+.lab-card { display: flex; flex-direction: column; gap: 8px; min-height: 190px; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: .625rem; padding: 16px; }
+.lab-card:hover { border-color: var(--cp-border-strong); }
+.card-meta { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: .8rem; color: var(--cp-text-muted); }
+.badge { color: var(--cp-text-muted); font-weight: 700; }
+.lab-card h3 { font-size: 1rem; margin: 0; }
+.lab-card p { font-size: .92rem; flex-grow: 1; margin: 0; }
+.card-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.card-links a { font-size: .85rem; font-weight: 600; border-radius: .625rem; padding: 6px 16px; background: var(--cp-accent-soft); color: var(--cp-accent); border: 1px solid var(--cp-border); text-decoration: none; }
+.card-links a:hover { border-color: var(--cp-accent); background: var(--cp-surface); }
+.start { font-weight: 700; color: var(--cp-accent); text-decoration: none; }
+.topbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 24px; min-height: 84px; padding: 16px 32px; border-bottom: 3px solid var(--cp-topbar-border); background: var(--cp-surface); color: var(--cp-text); }
+.topbar-title { flex: 1; min-width: 0; margin: 0; font-size: 1.5rem; font-weight: 700; }
+.topbar-nav { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
+.topbar-nav .button { white-space: nowrap; font-size: 1rem; font-weight: 600; }
+.topbar-nav .button[aria-disabled="true"] { color: var(--cp-border-strong); cursor: default; pointer-events: none; }
+.home-link { color: var(--cp-link); }
+.viewer-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 8px; width: min(1560px, calc(100% - 2rem)); margin: auto; padding: 8px 0 24px; align-items: stretch; }
+.sidebar { min-width: 0; border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-surface); }
+.sidebar-inner { position: sticky; top: calc(var(--cp-topbar-height, 76px) + 16px); max-height: calc(100dvh - var(--cp-topbar-height, 76px) - 32px); overflow-y: auto; border-radius: 16px; }
+.toc-toggle { width: 100%; text-align: left; border: 0; border-radius: 16px 16px 0 0; padding: 16px; font-weight: 700; }
+#toc { padding: 0 12px 16px; border-top: 1px solid var(--cp-border); }
+#toc ul { list-style: none; padding: 0; margin: 12px 0 0; }
+#toc a { display: block; border-radius: .625rem; padding: 6px 8px; color: var(--cp-text-muted); font-size: .85rem; text-decoration: none; overflow-wrap: anywhere; }
+#toc a:hover, #toc a[aria-current="location"] { background: var(--cp-accent-soft); color: var(--cp-accent); }
+#toc .level-3 { padding-left: 16px; }
+#toc .level-4 { padding-left: 24px; }
+.document { min-width: 0; margin-right: .2rem; border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-surface); padding: 32px calc(40px / 3); }
+.document-head { border-bottom: 1px solid var(--cp-border); padding-bottom: 16px; margin-bottom: 24px; }
+.document-head .toolbar { margin-top: 16px; }
+.document-head p:not(.eyebrow) { font-size: .85rem; margin: 12px 0 0; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar button { font-size: .9rem; }
+.toolbar [aria-current="page"] { background: var(--cp-accent-soft); border-color: var(--cp-accent); color: var(--cp-accent); }
+.markdown { overflow-wrap: anywhere; }
+.markdown h1 { font-size: 1.8rem; }
+.markdown h2 { font-size: 1.45rem; margin-top: 40px; border-bottom: 1px solid var(--cp-border); padding-bottom: 8px; }
+.markdown h3 { font-size: 1.15rem; margin-top: 28px; }
+.markdown :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--cp-topbar-height, 76px) + 24px); }
+.markdown :is(ul, ol) { padding-left: 28px; }
+.markdown li { margin: 8px 0; }
+.markdown blockquote { margin: 24px 0; padding: 16px 20px; border-left: 4px solid var(--cp-accent); background: var(--cp-accent-soft); }
+.markdown blockquote p:last-child { margin-bottom: 0; }
+.markdown :is(pre, code, kbd, samp, .url-text) { font-family: var(--cp-font-code); }
+.markdown code { background: var(--cp-surface-soft); border-radius: 4px; padding: 2px 5px; font-size: .9em; }
+.markdown pre { position: relative; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: .625rem; padding: 48px 16px 16px; overflow: auto; line-height: 1.6; }
+.markdown pre code { padding: 0; border-radius: 0; }
+.copy-button { position: absolute; right: 8px; top: 8px; font-family: var(--cp-font-body); font-size: .8rem; padding: 4px 12px; }
+.markdown img { display: block; max-width: 100%; height: auto; margin: 16px 0; border: 1px solid var(--cp-border); border-radius: .625rem; }
+.markdown .table-scroll { max-width: 100%; overflow: auto; margin: 20px 0; }
+.markdown table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.markdown th, .markdown td { padding: 12px; border: 1px solid var(--cp-border); text-align: left; min-width: 100px; }
+.markdown th { background: var(--cp-surface-soft); }
+.markdown hr { border: 0; border-top: 1px solid var(--cp-border); margin: 24px 0; }
+.notebook-cell { border-bottom: 1px solid var(--cp-border); padding-bottom: 20px; margin-bottom: 24px; }
+.cell-label { color: var(--cp-text-muted); font-size: .8rem; margin-bottom: 8px; }
+.lab-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--cp-border); padding-top: 24px; margin-top: 32px; }
+.lab-nav a { flex: 1; }
+.error-message, #status.error-message { color: var(--cp-danger); }
+.error-box { padding: 24px; border: 1px solid var(--cp-danger); border-radius: .625rem; }
+@media (max-width: 1000px) {
+  .viewer-layout { padding: calc(16px / 3) 0 16px; }
+  .document { padding: 24px 8px; }
+}
+@media (max-width: 700px) {
+  .shell { width: calc(100% - 32px); }
+  .hero { padding: 20px; margin-top: 16px; margin-bottom: 24px; }
+  .section-heading { gap: 12px; }
+  .cards { grid-template-columns: minmax(0, 1fr); margin-left: 0; }
+  .lab-card { padding: 16px; }
+}
+@media (max-width: 768px) {
+  .topbar { position: static; padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
+  .topbar-title { flex-basis: 100%; font-size: 1.25rem; }
+  .topbar-nav { width: 100%; justify-content: flex-end; }
+  .viewer-layout { display: block; padding: 4px 0 12px; }
+  .sidebar { margin-bottom: 4px; }
+  .sidebar-inner { position: static; max-height: none; overflow: visible; }
+  #toc { max-height: 40dvh; overflow-y: auto; }
+  .document { padding: 20px calc(16px / 3); }
+  .markdown :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: 16px; }
+  .lab-nav { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+@media print {
+  .topbar, .sidebar, .toolbar, .lab-nav, .copy-button, .skip-link { display: none; }
+  .viewer-layout { display: block; padding: 0; }
+  .document { border: 0; padding: 0; }
+  .markdown pre { white-space: pre-wrap; }
+}
+  </style>
+</head>
+<body class="catalog-page">
+  <a class="skip-link" href="#main">본문으로 이동</a>
+  <header class="hero shell">
+    <div>
+      <h1>Azure Databricks Labs</h1>
+      <p class="hero-copy">Azure Data bricks의 데이터 수집 및 Lakeflow 파이프라인을 학습합니다.</p>
+    </div>
+  </header>
+  <main class="shell" id="main">
+    <div id="lab-sections"></div>
+    <noscript><p class="error-message">실습 목록을 표시하려면 JavaScript를 활성화하세요. <a href="https://aiasdd.github.io/DP750/">DP750 원본 목록 보기</a></p></noscript>
+  </main>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+"use strict";
+
+window.LabSite = (() => {
+  const sourceBase = "https://aiasdd.github.io/DP750/";
+  const stages = [
+    { title: "보안 및 거버넌스", note: "Unity Catalog 객체에 대한 접근 제어를 실습합니다." },
+    { title: "데이터 수집 및 품질", note: "데이터를 수집하고 정제하며 품질 제약 조건을 적용합니다." },
+    { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
+  ];
+  const rows = [
+    ["04", 0, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    ["07", 1, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
+    ["08", 1, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
+    ["09", 1, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
+    ["10", 2, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
+    ["11", 2, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
+  ];
+  const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
+    id, stage, title, minutes, note,
+    file: `Labs/${stem}.md`,
+    notebook: `Labs/Notebooks/${stem}.ipynb`
+  }));
+
+  function viewerUrl(file) {
+    const url = new URL("viewer.html", location.href);
+    url.searchParams.set("file", file);
+    const theme = new URLSearchParams(location.search).get("scoutTheme");
+    if (theme === "light" || theme === "dark") url.searchParams.set("scoutTheme", theme);
+    return url.href;
+  }
+
+  const requestedTheme = new URLSearchParams(location.search).get("scoutTheme");
+  const systemTheme = matchMedia("(prefers-color-scheme: dark)");
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+  }
+  setTheme(["light", "dark"].includes(requestedTheme) ? requestedTheme : systemTheme.matches ? "dark" : "light");
+  systemTheme.addEventListener("change", event => {
+    if (!new URLSearchParams(location.search).has("scoutTheme")) setTheme(event.matches ? "dark" : "light");
+  });
+  if (["light", "dark"].includes(requestedTheme)) {
+    document.querySelectorAll('a[href^="index.html"], a[href^="viewer.html"]').forEach(link => {
+      const url = new URL(link.href);
+      url.searchParams.set("scoutTheme", requestedTheme);
+      link.href = url.href;
+    });
+  }
+  return { sourceBase, stages, labs, viewerUrl };
+})();
+
+"use strict";
+
+(() => {
+  const { stages, labs, viewerUrl } = window.LabSite;
+  const root = document.getElementById("lab-sections");
+  stages.forEach((stage, index) => {
+    const section = document.createElement("section");
+    section.className = "path-section";
+    const heading = document.createElement("div");
+    heading.className = "section-heading";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "section-toggle";
+    toggle.textContent = "−";
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-controls", `stage-${index}`);
+    toggle.setAttribute("aria-label", `${stage.title} 접기`);
+    const description = document.createElement("div");
+    const title = document.createElement("h2");
+    title.textContent = stage.title;
+    const note = document.createElement("p");
+    note.textContent = stage.note;
+    description.append(title, note);
+    heading.append(toggle, description);
+    const grid = document.createElement("div");
+    grid.className = "cards";
+    grid.id = `stage-${index}`;
+    labs.filter(lab => lab.stage === index).forEach(lab => {
+      const card = document.createElement("article");
+      card.className = "lab-card";
+      const meta = document.createElement("div");
+      meta.className = "card-meta";
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = `LAB ${lab.id}`;
+      const duration = document.createElement("span");
+      duration.textContent = `${lab.minutes}분`;
+      meta.append(badge, duration);
+      const name = document.createElement("h3");
+      name.textContent = lab.title;
+      const summary = document.createElement("p");
+      summary.textContent = lab.note;
+      const links = document.createElement("div");
+      links.className = "card-links";
+      const guide = document.createElement("a");
+      guide.className = "start";
+      guide.href = viewerUrl(lab.file);
+      guide.textContent = "가이드";
+      guide.setAttribute("aria-label", `${lab.title} 가이드 보기`);
+      links.append(guide);
+      if (lab.notebook) {
+        const notebook = document.createElement("a");
+        notebook.href = viewerUrl(lab.notebook);
+        notebook.textContent = "노트북";
+        notebook.setAttribute("aria-label", `${lab.title} 노트북 보기`);
+        links.append(notebook);
+      }
+      card.append(meta, name, summary, links);
+      grid.append(card);
+    });
+    toggle.addEventListener("click", () => {
+      grid.hidden = !grid.hidden;
+      toggle.textContent = grid.hidden ? "+" : "−";
+      toggle.setAttribute("aria-expanded", String(!grid.hidden));
+      toggle.setAttribute("aria-label", `${stage.title} ${grid.hidden ? "펼치기" : "접기"}`);
+    });
+    section.append(heading, grid);
+    root.append(section);
+  });
+
+})();
+  });
+</script>
+</body>
+</html>
