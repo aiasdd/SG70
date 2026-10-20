@@ -352,6 +352,7 @@ window.LabSite = (() => {
   const listTitle = document.title;
   const rootUrl = new URL(location.protocol === "file:" ? "index.html" : "./", location.href).href;
   const viewerPath = new URL("viewer.html", location.href).pathname;
+  const messageOrigin = location.protocol === "file:" ? "null" : location.origin;
   const findLab = file => labs.find(lab => lab.file === file || lab.notebook === file);
   let activeUrl = "";
   let activeTitle = "";
@@ -406,7 +407,7 @@ window.LabSite = (() => {
     navigate(target.searchParams.get("file"), target.hash);
   });
   addEventListener("message", event => {
-    if (event.source !== frame.contentWindow || event.origin !== location.origin || !event.data || typeof event.data !== "object") return;
+    if (event.source !== frame.contentWindow || event.origin !== messageOrigin || !event.data || typeof event.data !== "object") return;
     const { type, file, hash, title } = event.data;
     if (type === "labsite:home") navigate(null);
     else if (type === "labsite:navigate") navigate(file, typeof hash === "string" ? hash : "");
