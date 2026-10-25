@@ -230,13 +230,13 @@ window.LabSite = (() => {
     { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
   ];
   const rows = [
-    ["00", 0, "Azure Databricks 환경 설정", "00-setup", 15, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
-    ["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    // ["00", 0, "Azure Databricks 환경 설정", "00-setup", 50, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
+    // ["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
     ["07", 2, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
     ["08", 2, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
-    ["09", 2, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
-    ["10", 3, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 45, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
-    ["11", 3, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 45, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
+    ["09", 2, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 50, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
+    ["10", 3, "Azure Databricks를 사용한 데이터 파이프라인 설계 및 구현", "10-design-implement-data-pipelines-KO", 50, "Bronze·Silver·Gold 파이프라인과 오류 처리, 매개변수화를 구현합니다."],
+    ["11", 3, "Azure Databricks로 Lakeflow 작업 구현", "11-implement-lakeflow-jobs-KO", 50, "작업 종속성, 예약, 이벤트 트리거와 실패 알림을 구성합니다."]
   ];
   const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
     id, stage, title, minutes, note,
@@ -277,6 +277,7 @@ window.LabSite = (() => {
   const { stages, labs, viewerUrl } = window.LabSite;
   const root = document.getElementById("lab-sections");
   stages.forEach((stage, index) => {
+    if (!labs.some(lab => lab.stage === index)) return;
     const section = document.createElement("section");
     section.className = "path-section";
     const heading = document.createElement("div");
