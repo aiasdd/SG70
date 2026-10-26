@@ -111,9 +111,9 @@ a { color: var(--cp-link); }
 .skip-link:focus { top: 8px; }
 .viewer-shell { width: min(1560px, calc(100% - 2rem)); margin: 0 auto; height: 100vh; }
 .topbar { background: var(--cp-surface); border-bottom: 3px solid var(--cp-accent); padding: .75rem clamp(1rem, 2.5vw, 3.125rem); display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; position: fixed; inset: 0 0 auto; width: 100%; min-height: 5rem; z-index: 20; }
-.topbar-title { min-width: 0; margin: 0; color: var(--cp-title); font-size: 1.2rem; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-title { min-width: 0; margin: 0; color: var(--cp-title); font-size: 1.35rem; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .topbar-nav { display: flex; align-items: center; gap: .5rem; flex: 0 0 auto; }
-.button { display: inline-flex; min-height: 2rem; align-items: center; justify-content: center; padding: .15rem .8rem; border: 1px solid var(--cp-nav-border); border-radius: .65rem; background: var(--cp-surface); text-decoration: none; color: var(--cp-title); font-size: .9rem; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.button { display: inline-flex; min-height: 2.5rem; align-items: center; justify-content: center; padding: .3rem .8rem; border: 1px solid var(--cp-nav-border); border-radius: .65rem; background: var(--cp-surface); text-decoration: none; color: var(--cp-title); font-weight: 600; line-height: 1.2; white-space: nowrap; }
 .button:hover:not([aria-disabled="true"]) { background: var(--cp-accent-soft); border-color: var(--cp-accent); }
 .button:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
 .home-link { color: var(--cp-link); }
@@ -130,13 +130,12 @@ a { color: var(--cp-link); }
 .sidebar.is-collapsed .toc-title { writing-mode: vertical-rl; }
 #toc ul { list-style: none; margin: 0; padding: .75rem .5rem 1rem; }
 #toc li { margin: 0; padding: 0; }
-#toc a { display: block; padding: .45rem .5rem; color: var(--cp-text); text-decoration: none; font-size: .85rem; line-height: 1.5; border-left: 3px solid var(--cp-clear); transition: color .15s, background-color .15s, border-color .15s; }
-#toc a:hover { color: var(--cp-heading); background: var(--cp-accent-soft); border-left-color: var(--cp-accent); }
-#toc a[aria-current="location"] { color: var(--cp-accent-hover); background: var(--cp-accent-soft); border-left-color: var(--cp-accent); font-weight: 700; }
-#toc .level-1 { margin-left: 0; color: var(--cp-title); font-size: .95rem; font-weight: 700; margin-top: .3rem; }
-#toc .level-2 { margin-left: .5rem; color: var(--cp-text); font-size: .9rem; font-weight: 650; }
-#toc .level-3 { margin-left: 1rem; color: var(--cp-heading); font-size: .85rem; font-weight: 550; }
-#toc .level-4 { margin-left: 1.5rem; color: var(--cp-note-text); font-size: .825rem; font-weight: 500; }
+#toc a { display: block; padding: .45rem .5rem; color: var(--cp-text-muted); text-decoration: none; font-size: .85rem; line-height: 1.5; border-left: 3px solid var(--cp-clear); transition: color .15s, background-color .15s, border-color .15s; }
+#toc a:hover, #toc a[aria-current="location"] { color: var(--cp-heading); background: var(--cp-accent-soft); border-left-color: var(--cp-accent); }
+#toc .level-1 { margin-left: 0; font-weight: 600; margin-top: .3rem; }
+#toc .level-2 { margin-left: 0; }
+#toc .level-3 { margin-left: .8rem; }
+#toc .level-4 { margin-left: 1.6rem; }
 .content-area { flex: 1; min-width: 0; max-height: 100%; overflow-y: auto; padding-right: .2rem; scroll-behavior: auto; }
 .markdown { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 14px; padding: clamp(1.25rem, 3.8vw, 4.5rem) 1.5rem; line-height: 1.8; color: var(--cp-text); overflow-x: auto; }
 .markdown h1, .markdown h2, .markdown h3 { line-height: 1.3; }
@@ -146,7 +145,6 @@ a { color: var(--cp-link); }
 .markdown p { margin: 0 0 1rem; }
 .markdown blockquote { margin: 1.2rem 0 1.6rem; padding: .8rem 1rem; border-left: 4px solid var(--cp-accent); background: var(--cp-accent-soft); color: var(--cp-note-text); }
 .markdown blockquote p:last-child { margin-bottom: 0; }
-.admonition-icon { display: inline-block; margin-inline-end: .4em; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; font-size: 1.1em; line-height: 1; vertical-align: -.05em; }
 .markdown ol, .markdown ul { padding-left: 1.8rem; }
 .markdown li { padding-left: .1rem; margin: .35rem 0; }
 .markdown li::marker { color: var(--cp-accent-hover); }
@@ -182,9 +180,9 @@ a { color: var(--cp-link); }
   body { overflow: auto; }
   .viewer-shell { height: auto; }
   .topbar { flex-wrap: wrap; justify-content: center; gap: .45rem; padding: .55rem 1rem; min-height: 7rem; }
-  .topbar-title { flex: 0 0 100%; text-align: center; font-size: 1rem; }
+  .topbar-title { flex: 0 0 100%; text-align: center; font-size: 1.1rem; }
   .topbar-nav { justify-content: center; width: 100%; }
-  .button { min-height: 2rem; padding: .15rem .65rem; font-size: .85rem; }
+  .button { min-height: 2.35rem; padding: .25rem .65rem; font-size: .9rem; }
   .markdown { padding: 1.2rem; }
   .markdown :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--cp-topbar-height) + 16px); }
   .viewer-layout { flex-direction: column; height: auto; overflow: visible; }
@@ -258,9 +256,8 @@ window.LabSite = (() => {
   ];
   const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
     id, stage, title, minutes, note,
-    file: stage >= 2 ? `Labs/Notebooks/SG/${stem}.md` : `Labs/${stem}.md`,
-    notebook: stage >= 2 ? `Labs/Notebooks/SG/${stem}.ipynb`
-      : id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
+    file: `Labs/${stem}.md`,
+    notebook: id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
   }));
 
   function viewerUrl(file) {
@@ -302,15 +299,11 @@ window.LabSite = (() => {
   const toc = document.getElementById("toc");
   const title = document.getElementById("page-title");
   const contentArea = document.querySelector(".content-area");
-  const sidebar = document.querySelector(".sidebar");
-  let tocEntries = [];
-  let activeTocLink = null;
-  let tocUpdatePending = false;
   let sourceUrl;
 
   function notifyHost(type, data = {}) {
     if (parent !== window) {
-      parent.postMessage({ type, file, ...data }, location.protocol === "file:" ? "*" : location.origin);
+      parent.postMessage({ type, file, ...data }, location.origin === "null" ? "*" : location.origin);
     }
   }
   document.addEventListener("click", event => {
@@ -331,70 +324,16 @@ window.LabSite = (() => {
   const topbar = document.querySelector(".topbar");
   new ResizeObserver(() => {
     document.documentElement.style.setProperty("--cp-topbar-height", `${topbar.getBoundingClientRect().height}px`);
-    scheduleTocUpdate();
   }).observe(topbar);
-
-  function setActiveToc(link) {
-    if (activeTocLink === link) return;
-    activeTocLink?.removeAttribute("aria-current");
-    activeTocLink = link;
-    if (!link) return;
-    link.setAttribute("aria-current", "location");
-    if (toc.hidden) return;
-    const bounds = sidebar.getBoundingClientRect();
-    const item = link.getBoundingClientRect();
-    if (item.top < bounds.top) {
-      sidebar.scrollBy({ top: item.top - bounds.top - 8, behavior: "instant" });
-    } else if (item.bottom > bounds.bottom) {
-      sidebar.scrollBy({ top: item.bottom - bounds.bottom + 8, behavior: "instant" });
-    }
-  }
-
-  function updateActiveToc() {
-    if (!tocEntries.length) return;
-    const mobile = matchMedia("(max-width: 768px)").matches;
-    const scroller = mobile ? document.scrollingElement : contentArea;
-    const height = mobile ? innerHeight : scroller.clientHeight;
-    const top = (mobile ? topbar.getBoundingClientRect().bottom : contentArea.getBoundingClientRect().top) + 16;
-    let current = tocEntries[0];
-    if (scroller.scrollHeight > height + 2 && scroller.scrollTop + height >= scroller.scrollHeight - 2) {
-      current = tocEntries[tocEntries.length - 1];
-    } else {
-      for (const entry of tocEntries) {
-        if (entry.heading.getBoundingClientRect().top > top) break;
-        current = entry;
-      }
-    }
-    setActiveToc(current.link);
-  }
-
-  function scheduleTocUpdate() {
-    if (tocUpdatePending) return;
-    tocUpdatePending = true;
-    requestAnimationFrame(() => {
-      tocUpdatePending = false;
-      updateActiveToc();
-    });
-  }
-  contentArea.addEventListener("scroll", scheduleTocUpdate, { passive: true });
-  addEventListener("scroll", scheduleTocUpdate, { passive: true });
-  addEventListener("resize", scheduleTocUpdate);
-  new ResizeObserver(scheduleTocUpdate).observe(content);
 
   const tocToggle = document.getElementById("toc-toggle");
   const tocTitle = document.getElementById("toc-title");
   function toggleToc() {
     toc.hidden = !toc.hidden;
     [tocToggle, tocTitle].forEach(button => button.setAttribute("aria-expanded", String(!toc.hidden)));
-    sidebar.classList.toggle("is-collapsed", toc.hidden);
+    document.querySelector(".sidebar").classList.toggle("is-collapsed", toc.hidden);
     tocToggle.textContent = toc.hidden ? "+" : "−";
     tocToggle.setAttribute("aria-label", toc.hidden ? "목차 펼치기" : "목차 접기");
-    if (!toc.hidden) {
-      const link = activeTocLink;
-      activeTocLink = null;
-      setActiveToc(link);
-    }
-    scheduleTocUpdate();
   }
   tocToggle.addEventListener("click", toggleToc);
   tocTitle.addEventListener("click", toggleToc);
@@ -410,7 +349,6 @@ window.LabSite = (() => {
         behavior: "instant"
       });
     }
-    updateActiveToc();
   }
   addEventListener("hashchange", () => {
     if (location.hash) scrollToHeading(decodeURIComponent(location.hash.slice(1)));
@@ -418,8 +356,6 @@ window.LabSite = (() => {
   });
 
   function showError(error) {
-    tocEntries = [];
-    setActiveToc(null);
     console.error("실습 문서 로드 실패:", error);
     status.textContent = `문서를 표시할 수 없습니다: ${error.message}`;
     status.className = "error-message";
@@ -503,29 +439,6 @@ window.LabSite = (() => {
   }
 
   function enhanceContent() {
-    const admonitions = {
-      NOTE: { icon: "ℹ️", label: "참고" },
-      TIP: { icon: "💡", label: "팁" },
-      IMPORTANT: { icon: "❗", label: "중요" },
-      WARNING: { icon: "⚠️", label: "경고" },
-      CAUTION: { icon: "🛑", label: "주의" }
-    };
-    content.querySelectorAll("blockquote").forEach(quote => {
-      const paragraph = quote.firstElementChild;
-      if (paragraph?.tagName !== "P" || paragraph.firstChild?.nodeType !== Node.TEXT_NODE) return;
-      const text = paragraph.firstChild;
-      const marker = text.textContent.match(/^\s*(?:\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]|!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\b)(?:[ \t]*[:：])?[ \t]*(?:\r?\n)?/i);
-      if (!marker) return;
-      const { icon, label } = admonitions[(marker[1] || marker[2]).toUpperCase()];
-      const symbol = document.createElement("span");
-      symbol.className = "admonition-icon";
-      symbol.textContent = icon;
-      symbol.setAttribute("role", "img");
-      symbol.setAttribute("aria-label", label);
-      symbol.title = label;
-      text.textContent = text.textContent.slice(marker[0].length);
-      paragraph.prepend(symbol);
-    });
     content.querySelectorAll("a[href]").forEach(link => {
       const label = link.textContent.trim();
       if (/^(?:https?:\/\/|www\.|mailto:)\S+$/i.test(label) ||
@@ -628,37 +541,30 @@ window.LabSite = (() => {
       usedIds.add(id);
       heading.id = id;
       if (index === 0 || Number(heading.tagName.slice(1)) > 4) return;
-      const label = heading.textContent
-        .replace(/[#*0-9]\uFE0F?\u20E3|[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200D\uFE0E\uFE0F\u{E0020}-\u{E007F}]/gu, "")
-        .replace(/\s+/g, " ").trim();
-      if (!label) return;
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#${encodeURIComponent(id)}`;
       link.className = `level-${heading.tagName.slice(1)}`;
-      link.textContent = label;
+      link.textContent = heading.textContent;
       link.addEventListener("click", event => {
         event.preventDefault();
-        setActiveToc(link);
+        toc.querySelectorAll("[aria-current]").forEach(active => active.removeAttribute("aria-current"));
+        link.setAttribute("aria-current", "location");
         history.pushState(null, "", link.getAttribute("href"));
         scrollToHeading(id);
         notifyHost("labsite:position", { hash: location.hash });
       });
       item.append(link);
       list.append(item);
-      tocEntries.push({ heading, link });
     });
     toc.replaceChildren(list);
     if (!list.children.length) toc.textContent = "이 문서에는 제목 목차가 없습니다.";
     if (location.hash) {
       scrollToHeading(decodeURIComponent(location.hash.slice(1)));
     }
-    updateActiveToc();
   }
 
   async function load() {
-    tocEntries = [];
-    setActiveToc(null);
     content.setAttribute("aria-busy", "true");
     content.replaceChildren();
     status.textContent = "DP750에서 원본 문서를 불러오는 중입니다…";
