@@ -258,8 +258,9 @@ window.LabSite = (() => {
   ];
   const labs = rows.map(([id, stage, title, stem, minutes, note]) => ({
     id, stage, title, minutes, note,
-    file: `Labs/${stem}.md`,
-    notebook: id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
+    file: stage >= 2 ? `Labs/Notebooks/SG/${stem}.md` : `Labs/${stem}.md`,
+    notebook: stage >= 2 ? `Labs/Notebooks/SG/${stem}.ipynb`
+      : id === "00" ? "Labs/Notebooks/01-explore-azure-databricks-KO.ipynb" : `Labs/Notebooks/${stem}.ipynb`
   }));
 
   function viewerUrl(file) {
