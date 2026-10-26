@@ -246,8 +246,8 @@ window.LabSite = (() => {
     { title: "데이터 파이프라인", note: "데이터 파이프라인을 설계하고 Lakeflow 작업으로 자동화합니다." }
   ];
   const rows = [
-    //["00", 0, "Azure Databricks 환경 설정", "00-setup", 15, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
-    //["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
+    ["00", 0, "Azure Databricks 환경 설정", "00-setup", 15, "Azure Cloud Shell에서 스크립트를 실행해 Databricks Premium 작업 영역과 리소스 그룹을 프로비저닝합니다."],
+    ["04", 1, "보안 Unity 카탈로그 객체", "04-secure-unity-catalog-objects-KO", 50, "그룹 권한, 행 필터, 열 마스킹과 Key Vault 비밀 범위를 설정합니다."],
     ["07", 2, "Unity Catalog에 데이터 수집", "07-ingest-data-into-unity-catalog-KO", 50, "DataFrame, COPY INTO, CTAS와 Auto Loader로 데이터를 수집합니다."],
     ["08", 2, "Unity Catalog로 데이터 정제, 변환 및 로드", "08-cleanse-transform-load-data-into-unity-catalog-KO", 50, "PySpark로 데이터를 정제하고 조인과 PIVOT으로 분석용 데이터를 구성합니다."],
     ["09", 2, "Unity Catalog에서 데이터 품질 제약 조건 구현 및 관리", "09-implement-manage-data-quality-constraints-unity-catalog-KO", 45, "Lakeflow 파이프라인에서 널·범위 검사와 스키마 드리프트를 처리합니다."],
@@ -303,7 +303,7 @@ window.LabSite = (() => {
 
   function notifyHost(type, data = {}) {
     if (parent !== window) {
-      parent.postMessage({ type, file, ...data }, location.origin === "null" ? "*" : location.origin);
+      parent.postMessage({ type, file, ...data }, location.protocol === "file:" ? "*" : location.origin);
     }
   }
   document.addEventListener("click", event => {
@@ -624,10 +624,10 @@ window.LabSite = (() => {
     link.hidden = false;
     return link;
   }
-  const sequence = labs;
+  const sequence = labs.filter(item => !["00", "04"].includes(item.id));
   const index = sequence.indexOf(lab);
   const previous = sequence[index - 1];
-  const next = sequence[index + 1];
+  const next = index >= 0 ? sequence[index + 1] : undefined;
   const targetFile = item => isNotebook && item.notebook ? item.notebook : item.file;
   if (previous) {
     const href = viewerUrl(targetFile(previous));
