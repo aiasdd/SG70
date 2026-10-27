@@ -165,6 +165,16 @@ a { color: var(--cp-link); }
 .markdown pre { background: var(--cp-code-block); color: var(--cp-text); border: 1px solid var(--cp-border); padding: .5rem 4rem .5rem .9rem; font-size: .9rem; line-height: 1.6; border-radius: 10px; overflow-x: auto; }
 .markdown pre code { background: var(--cp-clear); color: inherit; font-size: inherit; padding: 0; }
 .markdown img { max-width: 100%; height: auto; display: block; }
+.markdown img[role="button"] { cursor: zoom-in; }
+.markdown img[role="button"]:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; }
+html.image-preview-open, html.image-preview-open body { overflow: hidden; }
+.image-preview { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--cp-surface); color: var(--cp-text); overflow: hidden; }
+.image-preview::backdrop { background: var(--cp-overlay); }
+.image-preview-toolbar { position: absolute; inset: 0 0 auto; z-index: 1; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--cp-border); background: var(--cp-surface); }
+.image-preview-toolbar p { margin: 0; font-size: .85rem; }
+.image-preview-viewport { position: absolute; inset: 64px 0 0; overflow: auto; overscroll-behavior: contain; }
+.image-preview-stage { display: grid; place-items: center; width: max-content; height: max-content; min-width: 100%; min-height: 100%; padding: 24px; }
+.image-preview-image { display: block; max-width: none; cursor: zoom-out; }
 .markdown img[alt="assistant-icon"], .markdown img[alt="assistant icon"] { display: inline-block; width: 1.05em; height: 1.05em; max-width: none; margin: 0 .15em; vertical-align: text-bottom; }
 .code-block-wrap { position: relative; }
 .copy-button { position: absolute; top: calc(.5rem + 1px); right: .45rem; display: inline-flex; align-items: center; justify-content: center; height: 1.44rem; border: 1px solid var(--cp-copy-border); background: var(--cp-surface); color: var(--cp-text); border-radius: 6px; padding: 0 .4rem; font-family: var(--cp-font-body); font-size: .75rem; font-weight: 600; line-height: 1.2; cursor: pointer; }
@@ -195,7 +205,7 @@ a { color: var(--cp-link); }
 }
 @media print {
   body { overflow: visible; }
-  .topbar, .sidebar, .copy-button, .skip-link { display: none; }
+  .topbar, .sidebar, .copy-button, .skip-link, .image-preview { display: none; }
   .viewer-shell, .viewer-layout { width: 100%; height: auto; margin: 0; overflow: visible; }
   .content-area { max-height: none; overflow: visible; }
   .markdown { border: 0; padding: 0; }
@@ -233,6 +243,17 @@ a { color: var(--cp-link); }
     </main>
   </div>
   </div>
+  <dialog id="image-preview" class="image-preview" aria-label="이미지 크게 보기" aria-describedby="image-preview-help">
+    <div class="image-preview-toolbar">
+      <p id="image-preview-help">휠로 확대/축소 · 이미지를 다시 클릭하거나 Esc 키로 닫기</p>
+      <button id="image-preview-close" class="button" type="button" autofocus>닫기</button>
+    </div>
+    <div id="image-preview-viewport" class="image-preview-viewport">
+      <div class="image-preview-stage">
+        <img id="image-preview-image" class="image-preview-image" alt="" draggable="false">
+      </div>
+    </div>
+  </dialog>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
 "use strict";
@@ -300,6 +321,73 @@ window.LabSite = (() => {
   const title = document.getElementById("page-title");
   const contentArea = document.querySelector(".content-area");
   let sourceUrl;
+
+  const imagePreview = document.getElementById("image-preview");
+  const previewViewport = document.getElementById("image-preview-viewport");
+  const previewImage = document.getElementById("image-preview-image");
+  let previewSource;
+  let previewScale = 1;
+  let previewFit = 1;
+
+  function sizePreview() {
+    const viewport = previewViewport.getBoundingClientRect();
+    previewFit = Math.min(
+      Math.max(1, viewport.width - 48) / previewSource.naturalWidth,
+      Math.max(1, viewport.height - 48) / previewSource.naturalHeight
+    );
+    previewImage.style.width = `${previewSource.naturalWidth * previewFit * previewScale}px`;
+    previewImage.style.height = `${previewSource.naturalHeight * previewFit * previewScale}px`;
+  }
+
+  function openImagePreview(image) {
+    if (!image.complete || !image.naturalWidth) {
+      status.textContent = "이미지를 아직 표시할 수 없습니다. 이미지 로딩 상태와 네트워크 연결을 확인하세요.";
+      status.className = "error-message";
+      return;
+    }
+    previewSource = image;
+    previewScale = 1;
+    previewImage.src = image.currentSrc || image.src;
+    previewImage.alt = image.alt;
+    previewImage.style.width = "0px";
+    previewImage.style.height = "0px";
+    imagePreview.showModal();
+    document.documentElement.classList.add("image-preview-open");
+    sizePreview();
+    previewViewport.scrollTo(0, 0);
+  }
+
+  document.getElementById("image-preview-close").addEventListener("click", () => imagePreview.close());
+  previewImage.addEventListener("click", () => imagePreview.close());
+  imagePreview.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      imagePreview.close();
+    }
+  });
+  imagePreview.addEventListener("close", () => {
+    document.documentElement.classList.remove("image-preview-open");
+    previewImage.removeAttribute("src");
+    previewSource?.focus({ preventScroll: true });
+    previewSource = null;
+  });
+  previewViewport.addEventListener("wheel", event => {
+    event.preventDefault();
+    if (!event.deltaY) return;
+    const before = previewImage.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - before.left) / before.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - before.top) / before.height));
+    const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
+      : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? previewViewport.clientHeight : 1;
+    previewScale = Math.max(.25, Math.min(8, previewScale * Math.exp(-event.deltaY * unit * .002)));
+    sizePreview();
+    const after = previewImage.getBoundingClientRect();
+    previewViewport.scrollLeft += after.left + x * after.width - (before.left + x * before.width);
+    previewViewport.scrollTop += after.top + y * after.height - (before.top + y * before.height);
+  }, { passive: false });
+  addEventListener("resize", () => {
+    if (imagePreview.open) sizePreview();
+  });
 
   function notifyHost(type, data = {}) {
     if (parent !== window) {
@@ -476,6 +564,23 @@ window.LabSite = (() => {
       image.src = url.href;
       image.removeAttribute("srcset");
       image.loading = "eager";
+      image.tabIndex = 0;
+      image.setAttribute("role", "button");
+      image.setAttribute("aria-haspopup", "dialog");
+      image.setAttribute("aria-controls", "image-preview");
+      image.setAttribute("aria-label", `${image.alt || "이미지"} 크게 보기`);
+      image.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        openImagePreview(image);
+      });
+      image.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          openImagePreview(image);
+        }
+      });
       image.addEventListener("error", () => {
         status.textContent = "일부 이미지를 불러오지 못했습니다. 네트워크 연결과 원본 서버 상태를 확인하세요.";
         status.className = "error-message";
