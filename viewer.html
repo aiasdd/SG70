@@ -132,6 +132,7 @@ a { color: var(--cp-link); }
 #toc li { margin: 0; padding: 0; }
 #toc a { display: block; padding: .45rem .5rem; color: var(--cp-text-muted); text-decoration: none; font-size: .85rem; line-height: 1.5; border-left: 3px solid var(--cp-clear); transition: color .15s, background-color .15s, border-color .15s; }
 #toc a:hover, #toc a[aria-current="location"] { color: var(--cp-heading); background: var(--cp-accent-soft); border-left-color: var(--cp-accent); }
+#toc a[aria-current="location"] { color: var(--cp-accent); font-weight: 700; }
 #toc .level-1 { margin-left: 0; font-weight: 600; margin-top: .3rem; }
 #toc .level-2 { margin-left: 0; }
 #toc .level-3 { margin-left: .8rem; }
@@ -454,7 +455,47 @@ window.LabSite = (() => {
   const topbar = document.querySelector(".topbar");
   new ResizeObserver(() => {
     document.documentElement.style.setProperty("--cp-topbar-height", `${topbar.getBoundingClientRect().height}px`);
+    scheduleTocUpdate();
   }).observe(topbar);
+
+  let tocEntries = [];
+  let activeTocLink = null;
+  let tocUpdateFrame = 0;
+
+  function updateTocPosition() {
+    tocUpdateFrame = 0;
+    if (!tocEntries.length) return;
+    const mobile = matchMedia("(max-width: 768px)").matches;
+    const readingTop = (mobile ? topbar.getBoundingClientRect().bottom : contentArea.getBoundingClientRect().top) + 16;
+    const scroller = mobile ? document.scrollingElement : contentArea;
+    const atBottom = scroller.scrollHeight > scroller.clientHeight &&
+      scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+    let current = tocEntries[0];
+    for (const entry of tocEntries) {
+      if (!atBottom && entry.heading.getBoundingClientRect().top > readingTop + 1) break;
+      current = entry;
+    }
+    if (activeTocLink === current.link) return;
+    activeTocLink?.removeAttribute("aria-current");
+    activeTocLink = current.link;
+    activeTocLink.setAttribute("aria-current", "location");
+    if (!mobile && !toc.hidden) {
+      const sidebar = document.querySelector(".sidebar");
+      const bounds = sidebar.getBoundingClientRect();
+      const linkBounds = activeTocLink.getBoundingClientRect();
+      if (linkBounds.top < bounds.top) sidebar.scrollTop += linkBounds.top - bounds.top;
+      else if (linkBounds.bottom > bounds.bottom) sidebar.scrollTop += linkBounds.bottom - bounds.bottom;
+    }
+  }
+
+  function scheduleTocUpdate() {
+    if (!tocUpdateFrame) tocUpdateFrame = requestAnimationFrame(updateTocPosition);
+  }
+
+  contentArea.addEventListener("scroll", scheduleTocUpdate, { passive: true });
+  addEventListener("scroll", scheduleTocUpdate, { passive: true });
+  addEventListener("resize", scheduleTocUpdate);
+  new ResizeObserver(scheduleTocUpdate).observe(content);
 
   const tocToggle = document.getElementById("toc-toggle");
   const tocTitle = document.getElementById("toc-title");
@@ -489,6 +530,8 @@ window.LabSite = (() => {
     console.error("실습 문서 로드 실패:", error);
     status.textContent = `문서를 표시할 수 없습니다: ${error.message}`;
     status.className = "error-message";
+    tocEntries = [];
+    activeTocLink = null;
     content.replaceChildren();
     const box = document.createElement("div");
     box.className = "error-box";
@@ -679,6 +722,8 @@ window.LabSite = (() => {
     });
     const usedIds = new Set();
     const list = document.createElement("ul");
+    tocEntries = [];
+    activeTocLink = null;
     const headings = content.querySelectorAll("h1, h2, h3, h4, h5, h6");
     headings.forEach((heading, index) => {
       const stem = heading.textContent.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s/g, "-") || `section-${index}`;
@@ -695,12 +740,12 @@ window.LabSite = (() => {
       link.textContent = heading.textContent;
       link.addEventListener("click", event => {
         event.preventDefault();
-        toc.querySelectorAll("[aria-current]").forEach(active => active.removeAttribute("aria-current"));
-        link.setAttribute("aria-current", "location");
         history.pushState(null, "", link.getAttribute("href"));
         scrollToHeading(id);
+        scheduleTocUpdate();
         notifyHost("labsite:position", { hash: location.hash });
       });
+      tocEntries.push({ heading, link });
       item.append(link);
       list.append(item);
     });
@@ -709,9 +754,12 @@ window.LabSite = (() => {
     if (location.hash) {
       scrollToHeading(decodeURIComponent(location.hash.slice(1)));
     }
+    scheduleTocUpdate();
   }
 
   async function load() {
+    tocEntries = [];
+    activeTocLink = null;
     content.setAttribute("aria-busy", "true");
     content.replaceChildren();
     status.textContent = "DP750에서 원본 문서를 불러오는 중입니다…";
@@ -733,8 +781,8 @@ window.LabSite = (() => {
       content.replaceChildren(file.endsWith(".ipynb") ? renderNotebook(text) : markdown(text));
       const documentTitle = content.querySelector("h1")?.textContent.trim().replace(/^랩\s*\d+\s*:\s*/i, "");
       if (documentTitle) {
-        title.textContent = documentTitle;
-        document.title = `${documentTitle}${file.endsWith(".ipynb") ? " · 노트북" : ""} | Azure Databricks Labs`;
+        title.textContent = `${lab.id}: ${documentTitle}`;
+        document.title = `${title.textContent}${file.endsWith(".ipynb") ? " · 노트북" : ""} | Azure Databricks Labs`;
       }
       enhanceContent();
       notifyHost("labsite:title", { title: document.title });
@@ -760,8 +808,8 @@ window.LabSite = (() => {
   }
   const isNotebook = file === lab.notebook;
   sourceUrl = new URL(file, sourceBase).href;
-  title.textContent = lab.title;
-  document.title = `${lab.title}${isNotebook ? " · 노트북" : ""} | Azure Databricks Labs`;
+  title.textContent = `${lab.id}: ${lab.title}`;
+  document.title = `${title.textContent}${isNotebook ? " · 노트북" : ""} | Azure Databricks Labs`;
   function configureLink(id, href, text) {
     const link = document.getElementById(id);
     link.href = href;
