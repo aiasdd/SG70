@@ -174,7 +174,8 @@ html.image-preview-open, html.image-preview-open body { overflow: hidden; }
 .image-preview-toolbar p { margin: 0; font-size: .85rem; }
 .image-preview-viewport { position: absolute; inset: 64px 0 0; overflow: auto; overscroll-behavior: contain; }
 .image-preview-stage { display: grid; place-items: center; width: max-content; height: max-content; min-width: 100%; min-height: 100%; padding: 24px; }
-.image-preview-image { display: block; max-width: none; cursor: zoom-out; }
+.image-preview-image { display: block; max-width: none; cursor: grab; touch-action: none; user-select: none; }
+.image-preview-image.is-dragging { cursor: grabbing; }
 .markdown img[alt="assistant-icon"], .markdown img[alt="assistant icon"] { display: inline-block; width: 1.05em; height: 1.05em; max-width: none; margin: 0 .15em; vertical-align: text-bottom; }
 .code-block-wrap { position: relative; }
 .copy-button { position: absolute; top: calc(.5rem + 1px); right: .45rem; display: inline-flex; align-items: center; justify-content: center; height: 1.44rem; border: 1px solid var(--cp-copy-border); background: var(--cp-surface); color: var(--cp-text); border-radius: 6px; padding: 0 .4rem; font-family: var(--cp-font-body); font-size: .75rem; font-weight: 600; line-height: 1.2; cursor: pointer; }
@@ -245,7 +246,7 @@ html.image-preview-open, html.image-preview-open body { overflow: hidden; }
   </div>
   <dialog id="image-preview" class="image-preview" aria-label="이미지 크게 보기" aria-describedby="image-preview-help">
     <div class="image-preview-toolbar">
-      <p id="image-preview-help">휠로 확대/축소 · 이미지를 다시 클릭하거나 Esc 키로 닫기</p>
+      <p id="image-preview-help">휠로 확대/축소 · 드래그로 이동 · 클릭 또는 Esc 키로 닫기</p>
       <button id="image-preview-close" class="button" type="button" autofocus>닫기</button>
     </div>
     <div id="image-preview-viewport" class="image-preview-viewport">
@@ -328,6 +329,8 @@ window.LabSite = (() => {
   let previewSource;
   let previewScale = 1;
   let previewFit = 1;
+  let previewDrag = null;
+  let previewDragged = false;
 
   function sizePreview() {
     const viewport = previewViewport.getBoundingClientRect();
@@ -347,6 +350,7 @@ window.LabSite = (() => {
     }
     previewSource = image;
     previewScale = 1;
+    previewDragged = false;
     previewImage.src = image.currentSrc || image.src;
     previewImage.alt = image.alt;
     previewImage.style.width = "0px";
@@ -358,7 +362,40 @@ window.LabSite = (() => {
   }
 
   document.getElementById("image-preview-close").addEventListener("click", () => imagePreview.close());
-  previewImage.addEventListener("click", () => imagePreview.close());
+  previewImage.addEventListener("pointerdown", event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    previewDragged = false;
+    previewDrag = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      left: previewViewport.scrollLeft,
+      top: previewViewport.scrollTop
+    };
+    previewImage.setPointerCapture(event.pointerId);
+  });
+  previewImage.addEventListener("pointermove", event => {
+    if (!previewDrag || event.pointerId !== previewDrag.pointerId) return;
+    const dx = event.clientX - previewDrag.x;
+    const dy = event.clientY - previewDrag.y;
+    if (!previewDragged && Math.hypot(dx, dy) < 5) return;
+    previewDragged = true;
+    previewImage.classList.add("is-dragging");
+    previewViewport.scrollLeft = previewDrag.left - dx;
+    previewViewport.scrollTop = previewDrag.top - dy;
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+    previewImage.addEventListener(type, event => {
+      if (!previewDrag || event.pointerId !== previewDrag.pointerId) return;
+      if (type !== "pointerup") previewDragged = true;
+      previewDrag = null;
+      previewImage.classList.remove("is-dragging");
+    });
+  });
+  previewImage.addEventListener("click", () => {
+    if (!previewDragged) imagePreview.close();
+    previewDragged = false;
+  });
   imagePreview.addEventListener("keydown", event => {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -366,6 +403,11 @@ window.LabSite = (() => {
     }
   });
   imagePreview.addEventListener("close", () => {
+    if (previewDrag && previewImage.hasPointerCapture(previewDrag.pointerId)) {
+      previewImage.releasePointerCapture(previewDrag.pointerId);
+    }
+    previewDrag = null;
+    previewImage.classList.remove("is-dragging");
     document.documentElement.classList.remove("image-preview-open");
     previewImage.removeAttribute("src");
     previewSource?.focus({ preventScroll: true });
